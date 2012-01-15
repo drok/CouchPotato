@@ -58,8 +58,8 @@ To run CP you will need Python.
 [Newznab.com](http://www.newznab.com/),
 [HD-Trailers](http://www.hd-trailers.net/),
 [The Pirate Bay](http://thepiratebay.org/),
-[PyInstaller](http://www.pyinstaller.org/)
-
+[PyInstaller](http://www.pyinstaller.org/),
+[Hachoir](https://bitbucket.org/haypo/hachoir/wiki/hachoir-core)
 
 
 

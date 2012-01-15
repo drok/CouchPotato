@@ -549,10 +549,16 @@ _ISO639 = (
     (u"Zuni", "zun", None),
 )
 
+# Bibliographic ISO-639-1 form (eg. "fr" => "French")
+ISO639_1 = {}
 # Bibliographic ISO-639-2 form (eg. "fre" => "French")
 ISO639_2 = {}
 for line in _ISO639:
     for key in line[1].split("/"):
         ISO639_2[key] = line[0]
+    if not line[2] == None:
+        for key in line[2].split("/"):
+          ISO639_1[key] = line[0]
+    
 del _ISO639
 
