@@ -3,6 +3,7 @@ from app.lib.provider.yarr.base import nzbBase
 from dateutil.parser import parse
 from urllib import urlencode
 from urllib2 import URLError
+from collections import defaultdict
 import time
 import traceback
 import urllib
@@ -102,8 +103,16 @@ class newzbin(nzbBase):
                     log.debug('No valid xml or to many requests.. You never know with %s.' % self.name)
                     return results
 
-                for item in xml:
+                try:
+                    original_languages=movie.languages.split(",")  # The original language of the movie
+          
+                except Exception, e:
+                    log.debug("Failed to decode original languages '%s' [%s] - assuming English" % (movie.languages, e))
+                    original_languages = [ 'English' ]
 
+                for item in xml:
+                    metadata = defaultdict(list)
+                    original_language = False
                     title = self.gettextelement(item, "title")
                     if 'error' in title.lower(): continue
 
@@ -111,7 +120,8 @@ class newzbin(nzbBase):
 
                     # Add attributes to name
                     for attr in item.find('{%s}attributes' % REPORT_NS):
-                        title += ' ' + attr.text
+                        t = attr.get('type')
+                        metadata[t].append(attr.text)
 
                     id = int(self.gettextelement(item, '{%s}id' % REPORT_NS))
                     size = str(int(self.gettextelement(item, '{%s}size' % REPORT_NS)) / 1024 / 1024) + ' mb'
@@ -121,6 +131,14 @@ class newzbin(nzbBase):
                     new.id = id
                     new.type = 'nzb'
                     new.name = title
+                    new.original_language = True if (set(metadata['Language']) & set(original_languages)) else False
+                    new.languages = metadata['Language']
+                    new.subtitles = metadata['Subtitles']
+                    new.video_formats = metadata['Video Fmt']
+                    new.audio_formats = metadata['Audio Fmt']
+                    new.video_genres = metadata['Video Genre']
+                    new.sources = metadata['Source']
+                    new.regions = metadata['Region System']
                     new.date = int(time.mktime(parse(date).timetuple()))
                     new.size = self.parseSize(size)
                     new.url = str(self.gettextelement(item, '{%s}nzb' % REPORT_NS))

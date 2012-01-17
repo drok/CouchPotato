@@ -17,7 +17,7 @@ class transmission():
         return self.config.get('Transmission', option)
 
     def send(self, torrent, imdbId=None):
-        log.info("Sending '%s' to Transmission." % torrent.name)
+        log.info("Sending '%s' to Transmission (id:%s, score:%.2f)" % (torrent.name,torrent.id,torrent.score))
 
         if self.isDisabled():
             log.error("Config properties are not filled in correctly.")

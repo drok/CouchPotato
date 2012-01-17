@@ -14,6 +14,9 @@ class nzbBase(rss):
     type = 'nzb'
     name = ''
 
+    video_formatScores = { 'x264': 1, '720p': 10, '1080p': 10, 'DVD': 0.5, }
+    audio_formatScores = { 'DTS': 4, 'AC3/DD': 3, 'AC3': 2 }
+    sourceScores = {'Blue-ray': 2, 'DVD': 1 }
     nameScores = [
         'proper:2', 'repack:2',
         'unrated:1',
@@ -21,8 +24,7 @@ class nzbBase(rss):
         'DTS:4', 'AC3:2',
         '720p:10', '1080p:10', 'bluray:10', 'dvd:1', 'dvdrip:1', 'brrip:1', 'bdrip:1',
         'imbt:1', 'cocain:1', 'vomit:1', 'fico:1', 'arrow:1', 'pukka:1', 'prism:1', 'devise:1',
-        'metis:1', 'diamond:1', 'wiki:1', 'cbgb:1', 'crossbow:1', 'sinners:1', 'amiable:1', 'refined:1', 'twizted:1', 'felony:1', 'hubris:1', 'machd:1', 
-        'german:-10', 'french:-10', 'spanish:-10', 'swesub:-20', 'danish:-10'
+        'metis:1', 'diamond:1', 'wiki:1', 'cbgb:1', 'crossbow:1', 'sinners:1', 'amiable:1', 'refined:1', 'twizted:1', 'felony:1', 'hubris:1', 'machd:1'
     ]
 
     catIds = {}
@@ -60,7 +62,15 @@ class nzbBase(rss):
         if nzb.name:
             score = self.nameScore(nzb.name, movie)
             score += self.nameRatioScore(nzb.name, movie.name)
-
+            if not nzb.original_language: # If a soundtrack in the original language is found, it's probably the original soundtrack (ie, not dubbed in german)
+                                      # This means that people who prefer dubbed versions to originals, should add "German" to their preferred keyword list
+              score -= 20
+            score += 0.1*len(nzb.languages) # + 0.1 for every language found (more choices = better)
+            score += 0.02*len(nzb.subtitles) # 0.02 for every subtitle found
+            score += sum(xref(self.video_formatScores, nzb.video_formats))
+            score += sum(xref(self.audio_formatScores, nzb.audio_formats))
+            score += sum(xref(self.sourceScores, nzb.sources))
+        log.debug('Calculated score of nzb= %s (id=%s) = %s' % (nzb.name,nzb.id,score))
         return score
 
     def nameScore(self, name, movie):
@@ -108,6 +118,9 @@ class nzbBase(rss):
             log.info('Already tried this one, ignored: %s' % item.name)
             return False
 
+        if self.config.get('global', 'originalsoundtrack') and not item.original_language:
+          return False
+
         def get_words(text):
             return filter(None, re.split('\W+', text.lower()))
 
@@ -149,7 +162,7 @@ class nzbBase(rss):
         # File to large
         maxSize = q.maximumSize(qualityType)
         if maxSize < item.size:
-            log.info('"%s" is too large to be %s. %sMB instead of the maximum of %sMB.' % (item.name, type['label'], item.size, maxSize))
+            log.info('"%s" (id:%s) is too large to be %s. %sMB instead of the maximum of %sMB.' % (item.name, item.id, type['label'], item.size, maxSize))
             return False
 
         if imdbResults:
@@ -248,6 +261,9 @@ class nzbBase(rss):
             self.cache = tempcache
         except:
             self.cache = {}
+
+def xref(d, l):
+    return [d[i] for i in l if d.has_key(i)]
 
 class torrentBase(nzbBase):
 

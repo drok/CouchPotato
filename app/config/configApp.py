@@ -49,6 +49,7 @@ class configApp():
         self.setDefault('global', 'ignoreWords', '')
         self.setDefault('global', 'preferredWords', '')
         self.setDefault('global', 'requiredWords', '')
+        self.setDefault('global', 'originalsoundtrack', True)
 
         self.addSection('Renamer')
         self.setDefault('Renamer', 'enabled', False)

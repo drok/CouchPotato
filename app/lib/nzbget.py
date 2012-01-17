@@ -19,7 +19,7 @@ class nzbGet():
         return self.config.get('Nzbget', option)
 
     def send(self, nzb):
-        log.info("Sending '%s' to nzbGet." % nzb.name)
+        log.info("Sending '%s' to nzbGet (id:%s, score:%.2f)" % (nzb.name,nzb.id,nzb.score))
 
         if self.isDisabled():
             log.error("Config properties are not filled in correctly.")

@@ -32,7 +32,7 @@ metadata = MetaData(engine)
 Session = scoped_session(sessionmaker(bind = engine, autocommit = True))
 
 # DB VERSION
-latestDatabaseVersion = 4
+latestDatabaseVersion = 5
 
 dbVersionTable = Table('DbVersion', metadata,
                      Column('version', Integer, primary_key = True)
@@ -44,6 +44,7 @@ movieTable = Table('Movie', metadata,
                      Column('dateChanged', DateTime(), default = datetime.datetime.utcnow),
                      Column('name', String()),
                      Column('year', Integer),
+                     Column('languages', String()),
                      Column('imdb', String()),
                      Column('status', String()),
                      Column('quality', String(), ForeignKey('QualityTemplate.id')),
@@ -256,8 +257,24 @@ def upgradeDb():
         if currentVersion.version < 2: migrateVersion2()
         if currentVersion.version < 3: migrateVersion3()
         if currentVersion.version < 4: migrateVersion4()
+        if currentVersion.version < 5: migrateVersion5()
     else: # assume version 2
         migrateVersion3()
+
+def migrateVersion5():
+    log.info('Upgrading DB to version 5.')
+
+    # for some normal executions
+    db = SqlSoup(engine)
+
+    try:
+        db.execute('ALTER TABLE Movie ADD languages VARCHAR')
+        log.info('Added languages to Movie table')
+    except OperationalError:
+        log.debug('Column languages already added.')
+
+    Session.add(DbVersion(5))
+    Session.flush()
 
 def migrateVersion4():
     log.info('Upgrading DB to version 4.')

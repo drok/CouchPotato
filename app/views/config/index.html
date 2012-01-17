@@ -68,6 +68,10 @@
 						Comma seperated. NZB/Torrents must contain these words. Example: GERMAN, DTS
 					</p>
 				</div>
+				<div class="ctrlHolder checkbox">
+					<label>Require original soundtrack</label>
+					<input type="checkbox" name="global.originalsoundtrack" value="True" ${' checked="checked"' if config.get('global', 'originalsoundtrack') else ''} />
+				</div>
 			</fieldset>
 		</div>
 

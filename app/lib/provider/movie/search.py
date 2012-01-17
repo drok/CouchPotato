@@ -28,8 +28,10 @@ class movieSearcher():
         # Update the cache
         movies = Db.query(Movie).order_by(Movie.name).filter(or_(Movie.status == u'want', Movie.status == u'waiting')).all()
         for movie in movies:
-            if not movie.extra:
+            if (not movie.extra) or (not movie.languages):
                 self.getExtraInfo(movie)
+
+            results = None
 
             # Fix db errors
             try:
@@ -177,6 +179,16 @@ class movieSearcher():
                 overview = self.theMovieDb.toSaveString(overview)
                 self.saveExtra(movieId, 'overview', overview)
 
+            # spoken_languages
+            languages_spoken = movieInfo.find("languages_spoken");
+            if languages_spoken:
+              languages=[]
+              for l in languages_spoken:
+                languages.append(l.get('name'))
+              if languages :
+                movie.languages=",".join(languages)
+                Db.flush()
+            
             hasPosterThumb = False
 
             images = movieInfo.findall('images/image')

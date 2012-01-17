@@ -46,12 +46,14 @@ class YarrCron(cronBase, rss):
         wait = 0.1 if self.debug else 10
         while True and not self.abort:
 
+            searched = [] # To prevent searching the same movie twice in a row
             #check single movie
             try:
                 for movieId in self.checkTheseMovies:
                     movie = Db.query(Movie).filter_by(id = movieId).one()
                     self._search(movie, True)
                     self.checkTheseMovies.pop(0)
+                    searched.append(movieId)
             except Exception, e:
                 log.error('Something went wrong with checkTheseMovies: %s' % e)
 
@@ -60,7 +62,7 @@ class YarrCron(cronBase, rss):
                 now = time.time()
                 if (self.lastChecked + self.intervalSec) < now: # and not self.debug:
                     self.lastChecked = now
-                    self.searchAll()
+                    self.searchAll(otherthan = searched)
             except Exception, e:
                 log.error('Something went wrong with searchAll: %s' % e)
 
@@ -81,14 +83,14 @@ class YarrCron(cronBase, rss):
         log.info('Forcing search to stop.')
         self.stop = True
 
-    def searchAll(self):
+    def searchAll(self, otherthan = []):
         log.info('Searching for new downloads, for all movies.')
         self.doCheck()
 
         #get all wanted movies
         movies = Db.query(Movie).filter(or_(Movie.status == 'want', Movie.status == 'waiting')).all()
         for movie in movies:
-            if not self.abort and not self.stop:
+            if not self.abort and not self.stop and not movie.id in otherthan:
                 self._search(movie)
 
         self.doCheck(False)

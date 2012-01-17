@@ -21,7 +21,7 @@ class sabNzbd():
         return self.config.get('Sabnzbd', option)
 
     def send(self, nzb, imdbId=None):
-        log.info("Sending '%s' to SABnzbd." % nzb.name)
+        log.info("Sending '%s' to SABnzbd (id:%s, score:%.2f)" % (nzb.name,nzb.id,nzb.score))
 
         if self.isDisabled():
             log.error("Config properties are not filled in correctly.")
